@@ -107,6 +107,7 @@ class SentenceTransformer(nn.Sequential):
             show_progress_bar = (logging.getLogger().getEffectiveLevel()==logging.INFO or logging.getLogger().getEffectiveLevel()==logging.DEBUG)
 
         all_embeddings = []
+        all_features = []
         length_sorted_idx = np.argsort([len(sen) for sen in sentences])
 
         iterator = range(0, len(sentences), batch_size)
@@ -135,6 +136,8 @@ class SentenceTransformer(nn.Sequential):
                     if feature_name not in features:
                         features[feature_name] = []
                     features[feature_name].append(sentence_features[feature_name])
+            
+            all_features.append(features)
 
             for feature_name in features:
                 features[feature_name] = torch.tensor(np.asarray(features[feature_name])).to(self.device)
@@ -147,8 +150,8 @@ class SentenceTransformer(nn.Sequential):
         reverting_order = np.argsort(length_sorted_idx)
         all_embeddings = [all_embeddings[idx] for idx in reverting_order]
 
-        return all_embeddings
-
+        return all_embeddings, all_features
+    
     def get_max_seq_length(self):
         if hasattr(self._first_module(), 'max_seq_length'):
             return self._first_module().max_seq_length
